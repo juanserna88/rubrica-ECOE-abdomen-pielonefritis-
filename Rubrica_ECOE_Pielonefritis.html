@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rúbrica ECOE — Semiología Médica | Hospital Simulado Umanizales</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --azul-oscuro: #1A3A5C;
+    --azul-medio: #2B6CB0;
+    --azul-claro: #D6E8F7;
+    --azul-bg: #EBF4FF;
+    --verde-oscuro: #276749;
+    --verde-claro: #C6F6D5;
+    --verde-bg: #F0FFF4;
+    --naranja: #744210;
+    --naranja-claro: #FEEBC8;
+    --naranja-bg: #FFFAF0;
+    --gris-100: #F7FAFC;
+    --gris-200: #EDF2F7;
+    --gris-300: #E2E8F0;
+    --gris-500: #718096;
+    --gris-700: #2D3748;
+    --rojo: #C53030;
+    --rojo-claro: #FED7D7;
+    --amarillo-bg: #FFFFF0;
+    --blanco: #FFFFFF;
+    --sombra: 0 2px 8px rgba(0,0,0,.08);
+    --radio: 10px;
+    --radio-sm: 6px;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #F0F4F8;
+    color: var(--gris-700);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .page { max-width: 820px; margin: 0 auto; }
+
+  /* ── HEADER ─────────────────────────────── */
+  .header {
+    background: var(--azul-oscuro);
+    border-radius: var(--radio);
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+  .header-icon {
+    width: 52px; height: 52px;
+    background: rgba(255,255,255,.12);
+    border-radius: var(--radio);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .header-icon svg { width: 28px; height: 28px; fill: none; stroke: #fff; stroke-width: 1.8; }
+  .header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: .3px; }
+  .header p  { font-size: .8rem; color: #93B8D8; margin-top: 3px; }
+  .badge-est {
+    margin-left: auto; flex-shrink: 0;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: .75rem;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  /* ── DATOS ESTUDIANTE ───────────────────── */
+  .card {
+    background: var(--blanco);
+    border: 1px solid var(--gris-300);
+    border-radius: var(--radio);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    box-shadow: var(--sombra);
+  }
+  .card-header {
+    padding: .7rem 1.25rem;
+    font-size: .82rem;
+    font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-header .pts-badge {
+    font-size: .75rem; font-weight: 500;
+    background: rgba(0,0,0,.2);
+    padding: 2px 10px;
+    border-radius: 20px;
+  }
+  .ch-data  { background: var(--gris-700); }
+  .ch-anam  { background: var(--azul-medio); }
+  .ch-ef    { background: var(--verde-oscuro); }
+  .ch-dx    { background: var(--naranja); }
+
+  .student-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 1.25rem;
+  }
+  @media(max-width:520px){ .student-grid { grid-template-columns: 1fr; } }
+
+  .field label {
+    display: block;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--gris-500);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 5px;
+  }
+  .field input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--gris-300);
+    border-radius: var(--radio-sm);
+    font-size: .88rem;
+    color: var(--gris-700);
+    background: var(--gris-100);
+    transition: border-color .15s, box-shadow .15s;
+    outline: none;
+  }
+  .field input:focus {
+    border-color: var(--azul-medio);
+    box-shadow: 0 0 0 3px rgba(43,108,176,.15);
+    background: #fff;
+  }
+
+  /* ── CRITERIOS ──────────────────────────── */
+  .criterion {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--gris-300);
+  }
+  .criterion:first-child { border-top: none; }
+
+  .crit-top { display: flex; align-items: flex-start; gap: 1rem; }
+  .crit-body { flex: 1; }
+
+  .crit-title { font-size: .9rem; font-weight: 600; color: var(--gris-700); margin-bottom: 4px; }
+  .crit-desc  { font-size: .8rem; color: var(--gris-500); line-height: 1.6; }
+  .crit-desc b { color: var(--gris-700); }
+
+  .checklist {
+    display: flex; flex-wrap: wrap; gap: 7px;
+    margin-top: .75rem;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--gris-100);
+    border: 1px solid var(--gris-300);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: .78rem;
+    color: var(--gris-500);
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s;
+    font-weight: 500;
+  }
+  .chip:hover { border-color: #9ABEE8; background: var(--azul-bg); color: var(--azul-medio); }
+  .chip.active {
+    background: var(--verde-claro);
+    border-color: #68D391;
+    color: var(--verde-oscuro);
+  }
+  .chip svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  .score-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    min-width: 64px;
+  }
+  .score-pill {
+    min-width: 62px;
+    text-align: center;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: .85rem;
+    font-weight: 600;
+    background: var(--gris-200);
+    color: var(--gris-500);
+    border: 1px solid var(--gris-300);
+    transition: all .2s;
+  }
+  .score-pill.earned { background: var(--verde-claro); color: var(--verde-oscuro); border-color: #68D391; }
+  .score-pill.zero   { background: var(--rojo-claro);  color: var(--rojo);         border-color: #FC8181; }
+  .score-lbl { font-size: .68rem; color: var(--gris-500); }
+
+  .obs-area {
+    margin-top: .75rem;
+    padding-top: .75rem;
+    border-top: 1px dashed var(--gris-300);
+  }
+  .obs-area label {
+    font-size: .72rem; font-weight: 600;
+    color: var(--gris-500);
+    text-transform: uppercase; letter-spacing: .4px;
+    display: block; margin-bottom: 5px;
+  }
+  .obs-area textarea {
+    width: 100%; resize: vertical; min-height: 54px;
+    padding: 7px 10px;
+    border: 1px solid var(--gris-300);
+    border-radius: var(--radio-sm);
+    font-size: .8rem;
+    color: var(--gris-700);
+    background: var(--gris-100);
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .obs-area textarea:focus { border-color: var(--azul-medio); background: #fff; }
+
+  /* ── TOGGLE DIAGNÓSTICO ─────────────────── */
+  .dx-row {
+    display: flex; align-items: center; gap: 10px; margin-top: .75rem; flex-wrap: wrap;
+  }
+  .toggle-group { display: flex; }
+  .toggle-group button {
+    padding: 7px 16px;
+    font-size: .8rem; font-weight: 600;
+    border: 1px solid var(--gris-300);
+    background: var(--gris-100);
+    color: var(--gris-500);
+    cursor: pointer;
+    transition: all .15s;
+    outline: none;
+  }
+  .toggle-group button:first-child {
+    border-radius: var(--radio-sm) 0 0 var(--radio-sm);
+  }
+  .toggle-group button:last-child {
+    border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
+    border-left: none;
+  }
+  .toggle-group button:hover { background: var(--gris-200); }
+  .toggle-group button.sel-yes {
+    background: var(--verde-claro); color: var(--verde-oscuro);
+    border-color: #68D391; z-index: 1;
+  }
+  .toggle-group button.sel-no  {
+    background: var(--rojo-claro);  color: var(--rojo);
+    border-color: #FC8181; z-index: 1;
+  }
+  .dx-input {
+    flex: 1; min-width: 180px;
+    padding: 7px 12px;
+    border: 1px solid var(--gris-300);
+    border-radius: var(--radio-sm);
+    font-size: .82rem;
+    color: var(--gris-700);
+    background: var(--gris-100);
+    outline: none;
+    font-family: inherit;
+    transition: border-color .15s;
+  }
+  .dx-input:focus { border-color: var(--azul-medio); background: #fff; }
+
+  /* ── SUBTOTALES ─────────────────────────── */
+  .subtotal-row {
+    padding: .6rem 1.25rem;
+    background: var(--gris-100);
+    border-top: 1px solid var(--gris-300);
+    display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
+    font-size: .82rem; color: var(--gris-500);
+  }
+  .subtotal-row strong { font-size: .95rem; color: var(--gris-700); font-weight: 700; }
+
+  /* ── TOTALES ────────────────────────────── */
+  .totals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 1.25rem;
+  }
+  @media(max-width:480px){ .totals-grid { grid-template-columns: 1fr; } }
+
+  .metric {
+    background: var(--blanco);
+    border: 1px solid var(--gris-300);
+    border-radius: var(--radio);
+    padding: 1rem 1.25rem;
+    text-align: center;
+    box-shadow: var(--sombra);
+  }
+  .metric .m-lbl  { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gris-500); margin-bottom: 6px; }
+  .metric .m-val  { font-size: 2rem;   font-weight: 700; color: var(--gris-700); line-height: 1; }
+  .metric .m-sub  { font-size: .72rem; color: var(--gris-500); margin-top: 4px; }
+  .metric.m-nota  .m-val { color: var(--azul-medio); }
+  .metric.m-result .m-val { font-size: 1.1rem; padding-top: 4px; }
+  .aprobado { color: var(--verde-oscuro) !important; }
+  .reprobado { color: var(--rojo) !important; }
+  .pendiente { color: var(--gris-500) !important; }
+
+  /* ── PROGRESS BAR ───────────────────────── */
+  .progress-wrap {
+    background: var(--blanco);
+    border: 1px solid var(--gris-300);
+    border-radius: var(--radio);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--sombra);
+  }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: .78rem; color: var(--gris-500); margin-bottom: 8px;
+  }
+  .progress-bar-bg {
+    height: 10px;
+    background: var(--gris-200);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(90deg, var(--azul-medio), var(--verde-oscuro));
+    transition: width .4s ease;
+    width: 0%;
+  }
+
+  /* ── ACCIONES ───────────────────────────── */
+  .actions {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: .75rem;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px;
+    border-radius: var(--radio-sm);
+    font-size: .85rem; font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .15s;
+    outline: none;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .btn-excel  { background: #1D6F42; color: #fff; }
+  .btn-excel:hover  { background: #166035; }
+  .btn-csv    { background: var(--azul-medio); color: #fff; }
+  .btn-csv:hover    { background: #276090; }
+  .btn-reset  { background: var(--gris-200); color: var(--gris-700); }
+  .btn-reset:hover  { background: var(--gris-300); }
+  .btn-print  { background: var(--gris-700); color: #fff; }
+  .btn-print:hover  { background: #1A202C; }
+
+  .footer-note {
+    font-size: .72rem;
+    color: var(--gris-500);
+    line-height: 1.6;
+    padding: .5rem 0;
+  }
+
+  /* ── TOAST ──────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: var(--gris-700); color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: var(--radio-sm);
+    font-size: .82rem; font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity .25s, transform .25s;
+    z-index: 9999;
+    max-width: 280px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: var(--verde-oscuro); }
+  .toast.error   { background: var(--rojo); }
+
+  /* ── PRINT ──────────────────────────────── */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .actions, .toast, .progress-wrap { display: none !important; }
+    .card, .metric, .totals-grid { box-shadow: none; }
+    .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .card-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ENCABEZADO -->
+  <div class="header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Hospital Simulado Umanizales</h1>
+      <p>Rúbrica ECOE · Semiología Médica · Estación: Dolor Abdominal — Pielonefritis</p>
+    </div>
+    <span class="badge-est">Universidad de Manizales</span>
+  </div>
+
+  <!-- DATOS ESTUDIANTE -->
+  <div class="card">
+    <div class="card-header ch-data">
+      <span>Datos del Estudiante</span>
+    </div>
+    <div class="student-grid">
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" id="nombre" placeholder="Ej: María García López">
+      </div>
+      <div class="field">
+        <label>Código estudiantil</label>
+        <input type="text" id="codigo" placeholder="Ej: 2021132045">
+      </div>
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="fecha">
+      </div>
+      <div class="field">
+        <label>Evaluador</label>
+        <input type="text" id="evaluador" placeholder="Ej: Dr. Juan David Serna">
+      </div>
+    </div>
+  </div>
+
+  <!-- PARTE 1: ANAMNESIS -->
+  <div class="card">
+    <div class="card-header ch-anam">
+      <span>Parte 1 — Anamnesis</span>
+      <span class="pts-badge" id="pts-anam">0 / 10 pts</span>
+    </div>
+
+    <!-- 1.1 -->
+    <div class="criterion">
+      <div class="crit-top">
+        <div class="crit-body">
+          <div class="crit-title">1.1 · Caracterización del dolor abdominal</div>
+          <div class="crit-desc">
+            Debe preguntar los <b>4 criterios obligatorios</b>. Si pregunta los 4 → <b>5 pts</b> · Si pregunta menos de 4 → <b>0 pts</b>
+          </div>
+          <div class="checklist" id="cl-dolor">
+            <span class="chip" data-key="d1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+              Localización
+            </span>
+            <span class="chip" data-key="d2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Tipo
+            </span>
+            <span class="chip" data-key="d3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Intensidad
+            </span>
+            <span class="chip" data-key="d4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              Irradiación
+            </span>
+          </div>
+        </div>
+        <div class="score-wrap">
+          <span class="score-pill" id="sp-dolor">—</span>
+          <span class="score-lbl">/ 5 pts</span>
+        </div>
+      </div>
+      <div class="obs-area">
+        <label>Observaciones</label>
+        <textarea id="obs-dolor" placeholder="Criterios adicionales explorados, orden de la anamnesis, observaciones…"></textarea>
+      </div>
+    </div>
+
+    <!-- 1.2 -->
+    <div class="criterion">
+      <div class="crit-top">
+        <div class="crit-body">
+          <div class="crit-title">1.2 · Síntomas concomitantes</div>
+          <div class="crit-desc">
+            Debe preguntar <b>≥ 3 de 5 síntomas</b>. Si pregunta ≥ 3/5 → <b>5 pts</b> · Si pregunta menos de 3 → <b>0 pts</b>
+          </div>
+          <div class="checklist" id="cl-concom">
+            <span class="chip" data-key="c1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+              Fiebre
+            </span>
+            <span class="chip" data-key="c2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              Disuria
+            </span>
+            <span class="chip" data-key="c3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Polaquiuria
+            </span>
+            <span class="chip" data-key="c4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Tenesmo
+            </span>
+            <span class="chip" data-key="c5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Urgencia
+            </span>
+          </div>
+        </div>
+        <div class="score-wrap">
+          <span class="score-pill" id="sp-concom">—</span>
+          <span class="score-lbl">/ 5 pts</span>
+        </div>
+      </div>
+      <div class="obs-area">
+        <label>Observaciones</label>
+        <textarea id="obs-concom" placeholder="Síntomas adicionales explorados, contexto clínico, notas…"></textarea>
+      </div>
+    </div>
+
+    <div class="subtotal-row">
+      <span>Subtotal anamnesis</span>
+      <strong id="sub-anam">—</strong>
+      <span>/ 10 pts</span>
+    </div>
+  </div>
+
+  <!-- PARTE 2: EXAMEN FÍSICO -->
+  <div class="card">
+    <div class="card-header ch-ef">
+      <span>Parte 2 — Examen Físico</span>
+      <span class="pts-badge" id="pts-ef">0 / 5 pts</span>
+    </div>
+
+    <div class="criterion">
+      <div class="crit-top">
+        <div class="crit-body">
+          <div class="crit-title">2.1 · Maniobras semiológicas abdominales y renales</div>
+          <div class="crit-desc">
+            Debe realizar <b>≥ 3 de 5 maniobras</b>. Si realiza ≥ 3/5 → <b>5 pts</b> · Si realiza menos de 3 → <b>0 pts</b>
+          </div>
+          <div class="checklist" id="cl-ef">
+            <span class="chip" data-key="e1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+              Palpación superficial
+            </span>
+            <span class="chip" data-key="e2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 14v-4a2 2 0 1 1 4 0v4"/><path d="M12 14v-2a2 2 0 1 1 4 0v2"/><path d="M16 14V9a2 2 0 1 1 4 0v5"/><path d="M4 14a2 2 0 0 0-2 2v2a8 8 0 0 0 16 0v-2a2 2 0 0 0-2-2z"/></svg>
+              Palpación profunda
+            </span>
+            <span class="chip" data-key="e3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+              Puntos pielo-ureterales (sup. y medio)
+            </span>
+            <span class="chip" data-key="e4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+              Baloteo renal
+            </span>
+            <span class="chip" data-key="e5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-4l-2 4h8l-2-4z"/></svg>
+              Puño-percusión
+            </span>
+          </div>
+        </div>
+        <div class="score-wrap">
+          <span class="score-pill" id="sp-ef">—</span>
+          <span class="score-lbl">/ 5 pts</span>
+        </div>
+      </div>
+      <div class="obs-area">
+        <label>Observaciones</label>
+        <textarea id="obs-ef" placeholder="Técnica, secuencia, errores de exploración, notas…"></textarea>
+      </div>
+    </div>
+
+    <div class="subtotal-row">
+      <span>Subtotal examen físico</span>
+      <strong id="sub-ef">—</strong>
+      <span>/ 5 pts</span>
+    </div>
+  </div>
+
+  <!-- PARTE 3: DIAGNÓSTICO -->
+  <div class="card">
+    <div class="card-header ch-dx">
+      <span>Parte 3 — Diagnóstico Presuntivo</span>
+      <span class="pts-badge" id="pts-dx">0 / 5 pts</span>
+    </div>
+
+    <div class="criterion">
+      <div class="crit-top">
+        <div class="crit-body">
+          <div class="crit-title">3.1 · Diagnóstico correcto</div>
+          <div class="crit-desc">
+            Diagnóstico esperado: <b>IVU Alta — Pielonefritis</b><br>
+            Diagnóstico correcto → <b>5 pts</b> · Cualquier otro diagnóstico → <b>0 pts</b>
+          </div>
+          <div class="dx-row">
+            <div class="toggle-group">
+              <button id="dx-yes" onclick="setDx(true)">✔ Correcto</button>
+              <button id="dx-no"  onclick="setDx(false)">✘ Incorrecto</button>
+            </div>
+            <input type="text" id="dx-text" class="dx-input" placeholder="Diagnóstico emitido por el estudiante">
+          </div>
+        </div>
+        <div class="score-wrap">
+          <span class="score-pill" id="sp-dx">—</span>
+          <span class="score-lbl">/ 5 pts</span>
+        </div>
+      </div>
+      <div class="obs-area">
+        <label>Observaciones</label>
+        <textarea id="obs-dx" placeholder="Diagnósticos diferenciales mencionados, justificación clínica, notas…"></textarea>
+      </div>
+    </div>
+
+    <div class="subtotal-row">
+      <span>Subtotal diagnóstico</span>
+      <strong id="sub-dx">—</strong>
+      <span>/ 5 pts</span>
+    </div>
+  </div>
+
+  <!-- PROGRESO -->
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Progreso de la evaluación</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="prog-fill"></div>
+    </div>
+  </div>
+
+  <!-- TOTALES -->
+  <div class="totals-grid">
+    <div class="metric">
+      <div class="m-lbl">Puntaje total</div>
+      <div class="m-val" id="total-val">—</div>
+      <div class="m-sub">/ 20 puntos</div>
+    </div>
+    <div class="metric m-nota">
+      <div class="m-lbl">Nota sobre 5.0</div>
+      <div class="m-val" id="nota-val">—</div>
+      <div class="m-sub">escala colombiana</div>
+    </div>
+    <div class="metric m-result">
+      <div class="m-lbl">Resultado</div>
+      <div class="m-val pendiente" id="result-val">Pendiente</div>
+      <div class="m-sub">corte aprobación ≥ 3.0</div>
+    </div>
+  </div>
+
+  <!-- ACCIONES -->
+  <div class="actions">
+    <button class="btn btn-excel" onclick="exportXLSX()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Exportar a Excel (.xlsx)
+    </button>
+    <button class="btn btn-csv" onclick="exportCSV()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar CSV
+    </button>
+    <button class="btn btn-reset" onclick="resetForm()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>
+      Nueva evaluación
+    </button>
+    <button class="btn btn-print" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimir / PDF
+    </button>
+  </div>
+
+  <p class="footer-note">
+    * Nota final = (Total / 20) × 5.0 &nbsp;·&nbsp; Corte de aprobación: 3.0 / 5.0 &nbsp;·&nbsp;
+    Hospital Simulado Umanizales — Facultad de Ciencias de la Salud
+  </p>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ─── ESTADO ─────────────────────────────── */
+const state = { dolor: new Set(), concom: new Set(), ef: new Set(), dx: null };
+
+/* ─── INIT ───────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('fecha').value = new Date().toISOString().slice(0, 10);
+  bindChips('cl-dolor',  state.dolor);
+  bindChips('cl-concom', state.concom);
+  bindChips('cl-ef',     state.ef);
+});
+
+/* ─── CHIPS ──────────────────────────────── */
+function bindChips(listId, set) {
+  document.querySelectorAll(`#${listId} .chip`).forEach(el => {
+    el.addEventListener('click', () => {
+      const k = el.dataset.key;
+      if (set.has(k)) { set.delete(k); el.classList.remove('active'); }
+      else            { set.add(k);    el.classList.add('active');    }
+      calc();
+    });
+  });
+}
+
+/* ─── DIAGNÓSTICO TOGGLE ─────────────────── */
+function setDx(val) {
+  state.dx = val;
+  document.getElementById('dx-yes').className = val === true  ? 'sel-yes' : '';
+  document.getElementById('dx-no').className  = val === false ? 'sel-no'  : '';
+  calc();
+}
+
+/* ─── CÁLCULO ────────────────────────────── */
+function calc() {
+  const dCount = state.dolor.size;
+  const cCount = state.concom.size;
+  const eCount = state.ef.size;
+
+  const s11 = dCount > 0 ? (dCount === 4 ? 5 : 0) : null;
+  const s12 = cCount > 0 ? (cCount >= 3  ? 5 : 0) : null;
+  const s21 = eCount > 0 ? (eCount >= 3  ? 5 : 0) : null;
+  const s31 = state.dx !== null ? (state.dx === true ? 5 : 0) : null;
+
+  setPill('sp-dolor',  s11, 5);
+  setPill('sp-concom', s12, 5);
+  setPill('sp-ef',     s21, 5);
+  setPill('sp-dx',     s31, 5);
+
+  const sub1 = (s11 !== null || s12 !== null)
+    ? (s11 || 0) + (s12 || 0) : null;
+  const sub2 = s21;
+  const sub3 = s31;
+
+  setEl('sub-anam', sub1, '—');
+  setEl('sub-ef',   sub2, '—');
+  setEl('sub-dx',   sub3, '—');
+
+  const pts1 = sub1 !== null ? sub1 : 0;
+  const pts2 = sub2 !== null ? sub2 : 0;
+  const pts3 = sub3 !== null ? sub3 : 0;
+
+  document.getElementById('pts-anam').textContent = `${pts1} / 10 pts`;
+  document.getElementById('pts-ef').textContent   = `${pts2} / 5 pts`;
+  document.getElementById('pts-dx').textContent   = `${pts3} / 5 pts`;
+
+  const anyDone = dCount > 0 || cCount > 0 || eCount > 0 || state.dx !== null;
+  if (!anyDone) {
+    ['total-val','nota-val'].forEach(id => document.getElementById(id).textContent = '—');
+    const rv = document.getElementById('result-val');
+    rv.textContent = 'Pendiente'; rv.className = 'm-val pendiente';
+    setProgress(0);
+    return;
+  }
+
+  const total = pts1 + pts2 + pts3;
+  const nota  = parseFloat(((total / 20) * 5).toFixed(1));
+  const aprobado = nota >= 3.0;
+
+  document.getElementById('total-val').textContent = total;
+  document.getElementById('nota-val').textContent  = nota.toFixed(1);
+  const rv = document.getElementById('result-val');
+  rv.textContent = aprobado ? 'Aprobado' : 'Reprobado';
+  rv.className   = 'm-val ' + (aprobado ? 'aprobado' : 'reprobado');
+
+  // Progreso: cuántos criterios del evaluador están marcados (max 4 posibles)
+  const done = (dCount > 0 ? 1 : 0) + (cCount > 0 ? 1 : 0) + (eCount > 0 ? 1 : 0) + (state.dx !== null ? 1 : 0);
+  setProgress(Math.round((done / 4) * 100));
+}
+
+function setPill(id, score, max) {
+  const el = document.getElementById(id);
+  if (score === null) { el.textContent = '—'; el.className = 'score-pill'; return; }
+  el.textContent = `${score}`;
+  el.className = 'score-pill ' + (score > 0 ? 'earned' : 'zero');
+}
+
+function setEl(id, val, fallback) {
+  document.getElementById(id).textContent = val !== null ? val : fallback;
+}
+
+function setProgress(pct) {
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent  = pct + '%';
+}
+
+/* ─── RECOLECTAR DATOS ───────────────────── */
+function getScores() {
+  const dCount = state.dolor.size;
+  const cCount = state.concom.size;
+  const eCount = state.ef.size;
+  const s11 = dCount === 4 ? 5 : 0;
+  const s12 = cCount >= 3  ? 5 : 0;
+  const s21 = eCount >= 3  ? 5 : 0;
+  const s31 = state.dx === true ? 5 : 0;
+  const total = s11 + s12 + s21 + s31;
+  const nota  = parseFloat(((total / 20) * 5).toFixed(1));
+  const labels = {
+    d1:'Localización', d2:'Tipo', d3:'Intensidad', d4:'Irradiación',
+    c1:'Fiebre', c2:'Disuria', c3:'Polaquiuria', c4:'Tenesmo', c5:'Urgencia',
+    e1:'Palp. superficial', e2:'Palp. profunda', e3:'Puntos pielo-ureterales',
+    e4:'Baloteo renal', e5:'Puño-percusión'
+  };
+  return {
+    s11, s12, s21, s31, total, nota,
+    dItems: [...state.dolor].map(k => labels[k]).join(', ') || 'Ninguno',
+    cItems: [...state.concom].map(k => labels[k]).join(', ') || 'Ninguno',
+    eItems: [...state.ef].map(k => labels[k]).join(', ')    || 'Ninguno',
+    dCount, cCount, eCount
+  };
+}
+
+function getFields() {
+  return {
+    nombre:    document.getElementById('nombre').value    || 'Sin nombre',
+    codigo:    document.getElementById('codigo').value    || '—',
+    fecha:     document.getElementById('fecha').value     || '—',
+    evaluador: document.getElementById('evaluador').value || '—',
+    obsDolor:  document.getElementById('obs-dolor').value || '—',
+    obsConcom: document.getElementById('obs-concom').value|| '—',
+    obsEf:     document.getElementById('obs-ef').value    || '—',
+    obsDx:     document.getElementById('obs-dx').value    || '—',
+    dxText:    document.getElementById('dx-text').value   || '—'
+  };
+}
+
+/* ─── EXPORTAR XLSX ──────────────────────── */
+function exportXLSX() {
+  if (typeof XLSX === 'undefined') { showToast('La librería XLSX no cargó. Use Exportar CSV.', 'error'); return; }
+  const sc = getScores();
+  const f  = getFields();
+
+  const aoa = [
+    ['HOSPITAL SIMULADO UMANIZALES', '', '', '', '', ''],
+    ['Rúbrica ECOE — Semiología Médica', '', '', '', '', ''],
+    ['Estación: Dolor Abdominal | Diagnóstico esperado: IVU Alta – Pielonefritis', '', '', '', '', ''],
+    [],
+    ['DATOS DEL ESTUDIANTE', '', '', '', '', ''],
+    ['Nombre:', f.nombre, '', 'Código:', f.codigo, ''],
+    ['Fecha:', f.fecha,   '', 'Evaluador:', f.evaluador, ''],
+    [],
+    ['#', 'COMPONENTE', 'CRITERIO DE EVALUACIÓN', 'PTS MÁX.', 'ÍTEMS MARCADOS', 'PTS OBT.'],
+    ['— PARTE 1: ANAMNESIS —', '', '', '', '', ''],
+    ['1.1', 'Caracterización del dolor', '4/4 criterios: Localización, Tipo, Intensidad, Irradiación',
+      5, f.dItems, sc.s11],
+    ['',    'Obs. dolor:', f.obsDolor, '', '', ''],
+    ['1.2', 'Síntomas concomitantes', '≥3/5: Fiebre, Disuria, Polaquiuria, Tenesmo, Urgencia',
+      5, f.cItems, sc.s12],
+    ['',    'Obs. concomitantes:', f.obsConcom, '', '', ''],
+    ['', 'SUBTOTAL ANAMNESIS', '', 10, '', sc.s11 + sc.s12],
+    [],
+    ['— PARTE 2: EXAMEN FÍSICO —', '', '', '', '', ''],
+    ['2.1', 'Maniobras semiológicas',
+      '≥3/5: Palp. superficial, Palp. profunda, Puntos pielo-ureterales, Baloteo renal, Puño-percusión',
+      5, f.eItems, sc.s21],
+    ['',    'Obs. examen físico:', f.obsEf, '', '', ''],
+    ['', 'SUBTOTAL EXAMEN FÍSICO', '', 5, '', sc.s21],
+    [],
+    ['— PARTE 3: DIAGNÓSTICO —', '', '', '', '', ''],
+    ['3.1', 'Diagnóstico presuntivo', 'Correcto: IVU Alta – Pielonefritis',
+      5, f.dxText, sc.s31],
+    ['',    'Obs. diagnóstico:', f.obsDx, '', '', ''],
+    ['', 'SUBTOTAL DIAGNÓSTICO', '', 5, '', sc.s31],
+    [],
+    ['', '', '', '', 'TOTAL PUNTAJE', sc.total],
+    ['', '', '', '', 'NOTA SOBRE 5.0', sc.nota],
+    ['', '', '', '', 'RESULTADO', sc.nota >= 3.0 ? 'APROBADO' : 'REPROBADO'],
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:8},{wch:28},{wch:55},{wch:10},{wch:40},{wch:10}];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Evaluación ECOE');
+  XLSX.writeFile(wb, `ECOE_${f.nombre.replace(/\s+/g,'_')}_${f.fecha}.xlsx`);
+  showToast('Archivo Excel descargado correctamente.', 'success');
+}
+
+/* ─── EXPORTAR CSV ───────────────────────── */
+function exportCSV() {
+  const sc = getScores();
+  const f  = getFields();
+  const rows = [
+    ['Nombre','Código','Fecha','Evaluador',
+     '1.1 Dolor (0/5)','1.2 Concom. (0/5)','2.1 Examen (0/5)','3.1 Dx (0/5)',
+     'Total /20','Nota /5.0','Resultado','Ítems dolor','Ítems concomitantes','Maniobras EF','Dx emitido'],
+    [f.nombre, f.codigo, f.fecha, f.evaluador,
+     sc.s11, sc.s12, sc.s21, sc.s31,
+     sc.total, sc.nota, sc.nota >= 3.0 ? 'APROBADO' : 'REPROBADO',
+     f.dItems, f.cItems, f.eItems, f.dxText]
+  ];
+  const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `ECOE_${f.nombre.replace(/\s+/g,'_')}_${f.fecha}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('CSV descargado. Pégalo en el Registro Grupal.', 'success');
+}
+
+/* ─── RESET ──────────────────────────────── */
+function resetForm() {
+  state.dolor.clear(); state.concom.clear(); state.ef.clear(); state.dx = null;
+  document.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
+  document.getElementById('dx-yes').className = '';
+  document.getElementById('dx-no').className  = '';
+  ['nombre','codigo','evaluador','dx-text'].forEach(id => document.getElementById(id).value = '');
+  ['obs-dolor','obs-concom','obs-ef','obs-dx'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fecha').value = new Date().toISOString().slice(0, 10);
+  ['sp-dolor','sp-concom','sp-ef','sp-dx'].forEach(id => {
+    const el = document.getElementById(id); el.textContent = '—'; el.className = 'score-pill';
+  });
+  ['sub-anam','sub-ef','sub-dx'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('pts-anam').textContent = '0 / 10 pts';
+  document.getElementById('pts-ef').textContent   = '0 / 5 pts';
+  document.getElementById('pts-dx').textContent   = '0 / 5 pts';
+  document.getElementById('total-val').textContent = '—';
+  document.getElementById('nota-val').textContent  = '—';
+  const rv = document.getElementById('result-val');
+  rv.textContent = 'Pendiente'; rv.className = 'm-val pendiente';
+  setProgress(0);
+  showToast('Formulario limpiado. Listo para nueva evaluación.');
+}
+
+/* ─── TOAST ──────────────────────────────── */
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '') + ' show';
+  setTimeout(() => { t.className = 'toast'; }, 3200);
+}
+</script>
+</body>
+</html>
