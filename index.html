@@ -530,12 +530,12 @@ body{
     </div>
     <div class="config-panel" id="config-panel">
       <label>URL del Google Apps Script (Web App)</label>
-      <input type="url" id="gas-url" placeholder="https://script.google.com/macros/s/XXXXXXXX/exec" oninput="saveConfig()">
+      <input type="url" id="gas-url" value="https://script.google.com/macros/s/AKfycbyjLRkgRVSeSab18INvzIn0pczd1VB353J7vYlGtXFQvZVh0XDr2T3gkGNMlf7paw61/exec" oninput="saveConfig()">
       <div class="config-note">
         Pega aquí la URL de tu Web App después de publicar el script. Ver el archivo <code>GAS_Script_ECOE.gs</code> adjunto con instrucciones paso a paso.
       </div>
       <label style="margin-top:.5rem">ID de la Google Sheet (matriz de notas)</label>
-      <input type="text" id="sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" oninput="saveConfig()">
+      <input type="text" id="sheet-id" value="1hzwhZ_y5at8wmpqZnTMF5FsX2gq0JUDkkQ82AgZXUMs" oninput="saveConfig()">
       <div class="config-note">
         El ID está en la URL de tu hoja: <code>docs.google.com/spreadsheets/d/<b>ID_AQUÍ</b>/edit</code>
       </div>
@@ -584,7 +584,8 @@ body{
 
 <script>
 const state = { dolor: new Set(), concom: new Set(), ef: new Set(), dx: null };
-let gasUrl = '', sheetId = '';
+let gasUrl = 'https://script.google.com/macros/s/AKfycbyjLRkgRVSeSab18INvzIn0pczd1VB353J7vYlGtXFQvZVh0XDr2T3gkGNMlf7paw61/exec';
+  let sheetId = '1hzwhZ_y5at8wmpqZnTMF5FsX2gq0JUDkkQ82AgZXUMs';
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('fecha').value = new Date().toISOString().slice(0,10);
@@ -592,8 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
   bindChips('cl-concom', state.concom);
   bindChips('cl-ef', state.ef);
   // Load saved config
-  gasUrl  = localStorage.getItem('ecoe_gas_url')  || '';
-  sheetId = localStorage.getItem('ecoe_sheet_id') || '';
+  gasUrl  = localStorage.getItem('ecoe_gas_url')  || 'https://script.google.com/macros/s/AKfycbyjLRkgRVSeSab18INvzIn0pczd1VB353J7vYlGtXFQvZVh0XDr2T3gkGNMlf7paw61/exec';
+  sheetId = localStorage.getItem('ecoe_sheet_id') || '1hzwhZ_y5at8wmpqZnTMF5FsX2gq0JUDkkQ82AgZXUMs';
   if (gasUrl)  document.getElementById('gas-url').value  = gasUrl;
   if (sheetId) document.getElementById('sheet-id').value = sheetId;
 });
